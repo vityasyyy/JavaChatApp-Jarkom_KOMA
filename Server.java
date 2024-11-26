@@ -124,9 +124,9 @@ class clientThread extends Thread {
                 if(line.startsWith("@")){
                     unicast(line, clientNameInput);
                 } else if(line.startsWith("!")){
-                    // blockcast
+                    blockcast(line, clientNameInput);
                 } else {
-                    // broadcast
+                    broadcast(line, clientNameInput);
                 }
             }
         } catch (IOException err) {
@@ -136,6 +136,7 @@ class clientThread extends Thread {
         }
     }
 
+    // send messages to a specific client
     void unicast(String line, String name) throws IOException, ClassNotFoundException {
         String[] words = line.split(":", 2); // split the words from commands and message
         if(words.length > 1 && words[1] != null) { // if the words contain a message, 
@@ -147,16 +148,58 @@ class clientThread extends Thread {
                     && current_client.clientName != null // if the client name is not null
                     // if the client name equals to @<client_name>
                     && current_client.clientName.equals(words[0])){ 
-                        current_client.outptStream.writeObject("{" + name + "}" + words[1]);
+                        current_client.outptStream.writeObject("{" + name + "}" + words[1]); // show the messages to the client
                         current_client.outptStream.flush();
+
+                        // show acknowledgement to the server
                         System.out.println(this.clientName.substring(1) + " transferred a private message to client " + current_client.clientName.substring(1));
 
+                        // show acknowledgement to the sender
                         this.outptStream.writeObject("Private message sent to " + current_client.clientName.substring(1));
                         this.outptStream.flush();
                         break;
                     }
                 }
             }
+        }
+    }
+    
+    // send messages to all clients except for the blocked one
+    void blockcast(String line, String name) throws IOException, ClassNotFoundException{
+        String[] words = line.split(":", 2);
+        if(words.length > 1 && words[1] != null) {
+            words[1] = words[1].trim();
+            if(!words[1].isEmpty()){
+                synchronized(this){
+                    for(clientThread current_client : clients) {
+                        if(current_client != null 
+                        && current_client != this 
+                        && current_client.clientName != null
+                        && !current_client.clientName.equals("@"+words[0].substring(1))) {
+                            current_client.outptStream.writeObject("{" + name + "}" + words[1]);
+                            current_client.outptStream.flush();
+                        }
+                    }
+
+                    this.outptStream.writeObject("Blockcast message sent to everyone except " + words[0].substring(1));
+                    this.outptStream.flush();
+                    System.out.println("Blockcast sent by " + this.clientName.substring(1) + " to everyone except " + words[0].substring(1));
+                }
+            }
+        }
+    }
+
+    void broadcast(String line, String name) throws IOException, ClassNotFoundException{
+        synchronized(this) {
+            for(clientThread current_client : clients) {
+                if(current_client != null && current_client.clientName != null && current_client.clientName != this.clientName) {
+                    current_client.outptStream.writeObject("{" + name + "}" + line);
+                    current_client.outptStream.flush();
+                }
+            }
+            this.outptStream.writeObject("Broadcast message sent successfully");
+            this.outptStream.flush();
+            System.out.println("Broadcast message sent by " + this.clientName.substring(1));
         }
     }
 }

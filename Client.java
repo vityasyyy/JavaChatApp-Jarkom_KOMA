@@ -45,9 +45,10 @@ public class Client implements Runnable{
                     if(message.split(":").length > 1) {
                         outptStream.writeObject(message);
                         outptStream.flush();
-                    }
-                    outptStream.writeObject(message);
-                    outptStream.flush(); 
+                    } else {
+                        outptStream.writeObject(message);
+                        outptStream.flush();
+                    } 
                 }
                 outptStream.close();
                 inptStream.close();

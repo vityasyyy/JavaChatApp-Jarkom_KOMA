@@ -77,13 +77,32 @@ class clientThread extends Thread {
                     this.outptStream.flush(); // flush the output stream
                     clientNameInput = (String) this.inptStream.readObject(); // read the client name from input stream
 
-                    // client name cannot contain @ or ! because it will be used for unicast and blockcast
-                    if((clientNameInput.indexOf('@') == -1) || (clientNameInput.indexOf('!') == -1)){
-                        break;
-                    } else {
-                        this.outptStream.writeObject("Username should not contain '@' or '!' char");
-                        this.outptStream.flush();
+                    // check if the client name is empty
+                    if(clientNameInput == null || clientNameInput.isEmpty()) {
+                        outptStream.writeObject("Name cannot be empty");
+                        outptStream.flush();
+                        continue;
                     }
+
+                    // client name cannot contain @ or ! because it will be used for unicast and blockcast
+                    if((clientNameInput.contains("@") || clientNameInput.contains("!"))) {
+                        outptStream.writeObject("Username should not contain '@' or '!' char");
+                        outptStream.flush();
+                        continue;
+                    }
+                    boolean nameExists = false;
+                    for(clientThread current_client : clients) {
+                        if(current_client != null && current_client.clientName != null && current_client.clientName.equals("@" + clientNameInput)) {
+                            nameExists = true;
+                            break;
+                        }
+                    }
+                    if(nameExists) {
+                        outptStream.writeObject("Username already exists");
+                        outptStream.flush();
+                        continue;
+                    }
+                    break; // break the loop if the client name is valid
                 }
             }
 
@@ -110,11 +129,11 @@ class clientThread extends Thread {
                     }
                 }
             }
+            // initial message for the client
+            this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, anything else for broadcast, /quit for quit)");
+            this.outptStream.flush();
 
             while(true) {
-                this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, anything else for broadcast, /quit for quit)");
-                this.outptStream.flush();
-
                 String line = (String) inptStream.readObject();
 
                 if(line.startsWith("/quit")){

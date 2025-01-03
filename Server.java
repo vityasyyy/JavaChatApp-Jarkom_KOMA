@@ -91,6 +91,7 @@ class clientThread extends Thread {
                         continue;
                     }
                     boolean nameExists = false;
+                    // self explanatory, if the name exists, break the loop then continue the iteration
                     for(clientThread current_client : clients) {
                         if(current_client != null && current_client.clientName != null && current_client.clientName.equals("@" + clientNameInput)) {
                             nameExists = true;
@@ -111,6 +112,7 @@ class clientThread extends Thread {
             this.outptStream.writeObject("Welcome " + clientNameInput + " to the chat room");
             this.outptStream.flush();
 
+            // send message to all clients that a new user has entered the chat room, and add prefix for unicasting
             synchronized(this) {
                 for(clientThread current_client : clients) {
                     if(current_client != null && current_client == this) {
@@ -130,6 +132,7 @@ class clientThread extends Thread {
             this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, anything else for broadcast, /quit for quit)");
             this.outptStream.flush();
 
+            // start listening to client input
             while(true) {
                 String line = (String) inptStream.readObject();
 
@@ -149,7 +152,7 @@ class clientThread extends Thread {
             System.out.println("Session terminated");
         } catch (ClassNotFoundException err) {
             System.out.println("Class not found");
-        } finally {
+        } finally { //cleanup the socket and streams
             try {
                 if (outptStream != null) outptStream.close();
                 if (inptStream != null) inptStream.close();
@@ -177,7 +180,7 @@ class clientThread extends Thread {
     // send messages to a specific client
     void unicast(String line, String name) throws IOException, ClassNotFoundException {
         String[] words = line.split(":", 2); // split the words from commands and message
-        if(!(words.length > 1 && words[1] != null)) {
+        if(!(words.length > 1 && words[1] != null)) { // check if the message is empty
             this.outptStream.writeObject("Specify the client name and your message, e.g. @<client_name>: <your_message>");
             this.outptStream.flush();
             return;
@@ -189,8 +192,8 @@ class clientThread extends Thread {
                 return;
             }
             for(clientThread current_client : clients) {
-                if(current_client == null || current_client == this) continue;
-                if(current_client.clientName.equals(words[0])){
+                if(current_client == null || current_client == this) continue; // skip the current client
+                if(current_client.clientName.equals(words[0])){ // check if the client name exists
                     current_client.outptStream.writeObject("{" + name + "(to you)}" + words[1]);
                     current_client.outptStream.flush();
 
@@ -221,6 +224,7 @@ class clientThread extends Thread {
                 return;
             }
             for(clientThread current_client : clients) {
+                // send message to all clients except the blocked one
                 if(current_client != null && current_client != this && current_client.clientName != null && !current_client.clientName.equals("@"+words[0].substring(1))){
                     current_client.outptStream.writeObject("{" + name + "(blockcast)}" + words[1]);
                     current_client.outptStream.flush();
@@ -232,7 +236,8 @@ class clientThread extends Thread {
             }
         }
     }
-
+    
+    // send messages to all clients
     void broadcast(String line, String name) throws IOException, ClassNotFoundException{
         if(line.isEmpty()) {
             this.outptStream.writeObject("Broadcast message cannot be empty");

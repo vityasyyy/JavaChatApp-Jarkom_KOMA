@@ -16,7 +16,7 @@ public class Client implements Runnable{
     public static void main(String[] args) {
         int portNumber = 6942;
         String host = "localhost";
-
+    
         if(args.length < 2) {
             System.out.println("Default server: " + host + "\nDefault port: " + portNumber);
         } else {
@@ -38,7 +38,7 @@ public class Client implements Runnable{
 
         if(clientSocket != null && outptStream != null && inptStream != null) {
             try{
-                new Thread(new Client()).start();
+                new Thread(new Client()).start(); // start a new thread to read data from server, implementing the run method
                 while(!closed){
                     String message = inputLine.readLine();
                     if (message == null) {
@@ -55,7 +55,7 @@ public class Client implements Runnable{
                         break;
                     }
 
-                    // Send normal messages
+                    // Read normal messages
                     outptStream.writeObject(message);
                     outptStream.flush(); 
                 }
@@ -66,6 +66,7 @@ public class Client implements Runnable{
             }
         }
     }
+    // cleanup method to close all streams and socket
     public static void cleanup() {
         try{
             closed = true;

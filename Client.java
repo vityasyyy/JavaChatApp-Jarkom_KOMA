@@ -11,7 +11,7 @@ public class Client implements Runnable{
     private static ObjectOutputStream outptStream = null;
     private static ObjectInputStream inptStream = null;
     private static BufferedReader inputLine = null;
-    private static boolean closed = false;
+    private static volatile boolean closed = false;
 
     public static void main(String[] args) {
         int portNumber = 6942;
@@ -40,39 +40,62 @@ public class Client implements Runnable{
             try{
                 new Thread(new Client()).start();
                 while(!closed){
-                    String message = (String) inputLine.readLine().trim();
+                    String message = inputLine.readLine();
+                    if (message == null) {
+                        break;
+                    }
+                    
+                    message = message.trim();
+                    
+                    // Check for quit command first
+                    if (message.startsWith("/quit")) {
+                        outptStream.writeObject(message);
+                        outptStream.flush();
+                        closed = true;
+                        break;
+                    }
 
-                    if(message.split(":").length > 1) {
-                        outptStream.writeObject(message);
-                        outptStream.flush();
-                    } else {
-                        outptStream.writeObject(message);
-                        outptStream.flush();
-                    } 
+                    // Send normal messages
+                    outptStream.writeObject(message);
+                    outptStream.flush(); 
                 }
-                outptStream.close();
-                inptStream.close();
-                clientSocket.close();
             } catch (IOException err) {
                 System.out.println("IOException:" + err);
+            } finally {
+                cleanup();
             }
         }
     }
-    
+    public static void cleanup() {
+        try{
+            closed = true;
+            if(inputLine != null) inputLine.close();
+            if(outptStream != null)outptStream.close();
+            if(inptStream != null)inptStream.close();
+            if(clientSocket != null)clientSocket.close();
+        } catch (IOException err) {
+            System.out.println("IOException: " + err);
+        }
+    }
     // overriding the runnable interface run method
     public void run(){
         String responseLine;
         try{
-            while((responseLine = (String) inptStream.readObject()) != null) {
+            while(!closed && (responseLine = (String) inptStream.readObject()) != null) {
                 System.out.println(responseLine);
                 if(responseLine.indexOf("Bye") != -1) {
+                    closed = true;
                     break;
                 }
             }
-            closed = true;
-            System.exit(0);
         } catch (IOException | ClassNotFoundException err) {
-            System.out.println("IOException: " + err);
+            if(!closed){
+                System.out.println("Server has closed the connection: " + err);
+                System.exit(1);
+            }
+        } finally {
+            cleanup();
+            System.exit(0);
         }
     }
 }

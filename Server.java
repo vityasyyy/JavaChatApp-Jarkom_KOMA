@@ -234,6 +234,11 @@ class clientThread extends Thread {
     }
 
     void broadcast(String line, String name) throws IOException, ClassNotFoundException{
+        if(line.isEmpty()) {
+            this.outptStream.writeObject("Broadcast message cannot be empty");
+            this.outptStream.flush();
+            return;
+        }
         for(clientThread current_client : clients) {
             if(current_client != null && current_client.clientName != null && current_client.clientName != this.clientName) {
                 current_client.outptStream.writeObject("{" + name + "(broadcast)}" + line);

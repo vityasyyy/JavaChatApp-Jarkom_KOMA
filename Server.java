@@ -202,18 +202,12 @@ class clientThread extends Thread {
                 return;
             }
             for(clientThread current_client : clients) {
-                if(current_client == null || current_client == this) continue;
-                if(!current_client.clientName.equals("@"+words[0].substring(1))){
+                if(current_client != null && current_client != this && !current_client.clientName.equals("@"+words[0].substring(1))){
                     current_client.outptStream.writeObject("{" + name + "(blockcast)}" + words[1]);
                     current_client.outptStream.flush();
-
-                    System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
-
-                    this.outptStream.writeObject("Blockcast message sent to everyone except: " + current_client.clientName.substring(1));
-                    this.outptStream.flush();
-                    break;
                 }
-                this.outptStream.writeObject("Client " + words[0].substring(1) + " not found");
+                System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
+                this.outptStream.writeObject("Blockcast message sent to everyone except: " + current_client.clientName.substring(1));
                 this.outptStream.flush();
                 break;
             }

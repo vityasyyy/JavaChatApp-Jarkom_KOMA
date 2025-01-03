@@ -111,9 +111,6 @@ class clientThread extends Thread {
             this.outptStream.writeObject("Welcome " + clientNameInput + " to the chat room");
             this.outptStream.flush();
 
-            this.outptStream.writeObject("Directory created");
-            this.outptStream.flush();
-
             synchronized(this) {
                 for(clientThread current_client : clients) {
                     if(current_client != null && current_client == this) {
@@ -152,6 +149,28 @@ class clientThread extends Thread {
             System.out.println("Session terminated");
         } catch (ClassNotFoundException err) {
             System.out.println("Class not found");
+        } finally {
+            try {
+                if (outptStream != null) outptStream.close();
+                if (inptStream != null) inptStream.close();
+                if (clientSocket != null) clientSocket.close();
+                
+                // Remove client from list
+                synchronized (clients) {
+                    clients.remove(this);
+                    System.out.println("Client " + clientName + " disconnected");
+                    
+                    // Notify others about disconnection
+                    for (clientThread client : clients) {
+                        if (client != null && client.clientName != null) {
+                            client.outptStream.writeObject("User " + clientName.substring(1) + " left the chat room");
+                            client.outptStream.flush();
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Error during cleanup: " + e.getMessage());
+            }
         }
     }
 
@@ -202,12 +221,12 @@ class clientThread extends Thread {
                 return;
             }
             for(clientThread current_client : clients) {
-                if(current_client != null && current_client != this && !current_client.clientName.equals("@"+words[0].substring(1))){
+                if(current_client != null && current_client != this && current_client.clientName != null && !current_client.clientName.equals("@"+words[0].substring(1))){
                     current_client.outptStream.writeObject("{" + name + "(blockcast)}" + words[1]);
                     current_client.outptStream.flush();
                 }
                 System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
-                this.outptStream.writeObject("Blockcast message sent to everyone except: " + current_client.clientName.substring(1));
+                this.outptStream.writeObject("Blockcast message sent to everyone except: " + words[0]);
                 this.outptStream.flush();
                 break;
             }

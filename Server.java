@@ -158,27 +158,32 @@ class clientThread extends Thread {
     // send messages to a specific client
     void unicast(String line, String name) throws IOException, ClassNotFoundException {
         String[] words = line.split(":", 2); // split the words from commands and message
-        if(words.length > 1 && words[1] != null) { // if the words contain a message, 
-            words[1] = words[1].trim(); //remove whitespace from both ends
-            if(!words[1].isEmpty()){
-                for(clientThread current_client : clients) {
-                    if(current_client != null // if there's client
-                    && current_client != this // if the client is not the current client
-                    && current_client.clientName != null // if the client name is not null
-                    // if the client name equals to @<client_name>
-                    && current_client.clientName.equals(words[0])){ 
-                        current_client.outptStream.writeObject("{" + name + "}" + words[1]); // show the messages to the client
-                        current_client.outptStream.flush();
+        if(!(words.length > 1 && words[1] != null)) {
+            this.outptStream.writeObject("Specify the client name and your message, e.g. @<client_name>: <your_message>");
+            this.outptStream.flush();
+            return;
+        } else {
+            words[1] = words[1].trim(); //remove the whitespace from both ends of the messages
+            if(words[1].isEmpty()) {
+                this.outptStream.writeObject("Message cannot be empty");
+                this.outptStream.flush();
+                return;
+            }
+            for(clientThread current_client : clients) {
+                if(current_client == null || current_client == this) continue;
+                if(current_client.clientName.equals(words[0])){
+                    current_client.outptStream.writeObject("{" + name + "(to you)}" + words[1]);
+                    current_client.outptStream.flush();
 
-                        // show acknowledgement to the server
-                        System.out.println(this.clientName.substring(1) + " transferred a private message to client " + current_client.clientName.substring(1));
+                    System.out.println(this.clientName.substring(1) + " transferred a private message to client " + current_client.clientName.substring(1));
 
-                        // show acknowledgement to the sender
-                        this.outptStream.writeObject("Private message sent to " + current_client.clientName.substring(1));
-                        this.outptStream.flush();
-                        break;
-                    }
+                    this.outptStream.writeObject("Private message sent to " + current_client.clientName.substring(1));
+                    this.outptStream.flush();
+                    break;
                 }
+                this.outptStream.writeObject("Client " + words[0].substring(1) + " not found");
+                this.outptStream.flush();
+                break;
             }
         }
     }
@@ -186,39 +191,44 @@ class clientThread extends Thread {
     // send messages to all clients except for the blocked one
     void blockcast(String line, String name) throws IOException, ClassNotFoundException{
         String[] words = line.split(":", 2);
-        if(words.length > 1 && words[1] != null) {
-            words[1] = words[1].trim();
-            if(!words[1].isEmpty()){
-                synchronized(this){
-                    for(clientThread current_client : clients) {
-                        if(current_client != null 
-                        && current_client != this 
-                        && current_client.clientName != null
-                        && !current_client.clientName.equals("@"+words[0].substring(1))) {
-                            current_client.outptStream.writeObject("{" + name + "}" + words[1]);
-                            current_client.outptStream.flush();
-                        }
-                    }
+        if(words.length < 1 && words[1] == null) {
+            this.outptStream.writeObject("Specify the client name and your message, e.g. !<client_name>: <your_message>");
+            this.outptStream.flush();
+            return;
+        } else {
+            if(words[1].isEmpty()) {
+                this.outptStream.writeObject("Message cannot be empty");
+                this.outptStream.flush();
+                return;
+            }
+            for(clientThread current_client : clients) {
+                if(current_client == null || current_client == this) continue;
+                if(!current_client.clientName.equals("@"+words[0].substring(1))){
+                    current_client.outptStream.writeObject("{" + name + "(blockcast)}" + words[1]);
+                    current_client.outptStream.flush();
 
-                    this.outptStream.writeObject("Blockcast message sent to everyone except " + words[0].substring(1));
+                    System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
+
+                    this.outptStream.writeObject("Blockcast message sent to everyone except: " + current_client.clientName.substring(1));
                     this.outptStream.flush();
-                    System.out.println("Blockcast sent by " + this.clientName.substring(1) + " to everyone except " + words[0].substring(1));
+                    break;
                 }
+                this.outptStream.writeObject("Client " + words[0].substring(1) + " not found");
+                this.outptStream.flush();
+                break;
             }
         }
     }
 
     void broadcast(String line, String name) throws IOException, ClassNotFoundException{
-        synchronized(this) {
-            for(clientThread current_client : clients) {
-                if(current_client != null && current_client.clientName != null && current_client.clientName != this.clientName) {
-                    current_client.outptStream.writeObject("{" + name + "}" + line);
-                    current_client.outptStream.flush();
-                }
+        for(clientThread current_client : clients) {
+            if(current_client != null && current_client.clientName != null && current_client.clientName != this.clientName) {
+                current_client.outptStream.writeObject("{" + name + "(broadcast)}" + line);
+                current_client.outptStream.flush();
             }
-            this.outptStream.writeObject("Broadcast message sent successfully");
-            this.outptStream.flush();
-            System.out.println("Broadcast message sent by " + this.clientName.substring(1));
         }
+        this.outptStream.writeObject("Broadcast message sent successfully");
+        this.outptStream.flush();
+        System.out.println("Broadcast message sent by " + this.clientName.substring(1));
     }
 }

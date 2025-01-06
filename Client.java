@@ -8,9 +8,9 @@ import java.net.UnknownHostException;
 
 public class Client implements Runnable{
     private static Socket clientSocket = null;
-    private static ObjectOutputStream outptStream = null;
-    private static ObjectInputStream inptStream = null;
-    private static BufferedReader inputLine = null;
+    private static ObjectOutputStream outptStream = null; // output stream to write data to server
+    private static ObjectInputStream inptStream = null; // input stream to read data from server
+    private static BufferedReader inputLine = null; // read input from user
     private static volatile boolean closed = false; // one thread can change the value of closed and other threads can see the change, to keep track of the connection status
 
     public static void main(String[] args) {
@@ -41,8 +41,8 @@ public class Client implements Runnable{
             try{
                 new Thread(new Client()).start(); // start a new thread to read data from server, implementing the run method
                 while(!closed){
-                    String message = inputLine.readLine();
-                    if (message == null) {
+                    String message = inputLine.readLine(); // read input from user
+                    if (message == null) { // if user closes the connection, close the client connection
                         break;
                     }
                     
@@ -50,13 +50,13 @@ public class Client implements Runnable{
                     
                     // Check for quit command first
                     if (message.startsWith("/quit")) {
-                        outptStream.writeObject(message);
+                        outptStream.writeObject(message); // write quit to the server
                         outptStream.flush();
                         closed = true; // close the connection and exit the program
                         break;
                     }
 
-                    // Read normal messages
+                    // Write message to the server
                     outptStream.writeObject(message);
                     outptStream.flush(); 
                 }
@@ -84,7 +84,7 @@ public class Client implements Runnable{
         String responseLine;
         try{
             while(!closed && (responseLine = (String) inptStream.readObject()) != null) {
-                System.out.println(responseLine);
+                System.out.println(responseLine); // print the message from server to the user console
                 if(responseLine.indexOf("Bye") != -1) {
                     closed = true;
                     break;

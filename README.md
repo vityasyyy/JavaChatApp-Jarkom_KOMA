@@ -2,11 +2,11 @@
 Final Project Socket Programming Jaringan Komputer KOM A Universitas Gadjah Mada.
 
 ## Anggota Kelompok
-**1. Andrian Danar Perdana (23/513040/PA/21917)**
-**2. Andreandhiki Riyanta Putra (23/517511/PA/22191)**
-**3. Daffa Indra Wibowo (23/518514/PA/22253)**
-**4. Rayhan Firdaus Ardian (23/519095/PA/22279)**
-**5. Muhammad Argya Vityasy (23/522547/PA/22475)**
+**1. Andrian Danar Perdana (23/513040/PA/21917)**<br/>
+**2. Andreandhiki Riyanta Putra (23/517511/PA/22191)**<br/>
+**3. Daffa Indra Wibowo (23/518514/PA/22253)**<br/>
+**4. Rayhan Firdaus Ardian (23/519095/PA/22279)**<br/>
+**5. Muhammad Argya Vityasy (23/522547/PA/22475)**<br/>
 
 ## Commit message (Biar commit nya rapi dan tidak berantakan)
 <**header_commit**>[**deskripsi_singkat**]: <**commit_message**> <br/> <br/>

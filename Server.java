@@ -35,10 +35,10 @@ public class Server {
         // Loop to listen for client request
         while(true) {
             try{
-                clientSocket = serverSocket.accept(); // accept client request to connect to server
+                clientSocket = serverSocket.accept(); // accept client request to connect to server, listen for a connection to be made to this socket and accept it
                 clientThread current_client = new clientThread(clientSocket, clients); // create new client thread
                 clients.add(current_client); // push the new client thread to the clients array
-                current_client.start(); // start the client thread to begin executing
+                current_client.start(); // start the client thread to begin executing, implementing the run method
                 System.out.println("Client " + clientID + " connected");
                 clientID++; // increment client id
             } catch(IOException err) {
@@ -129,7 +129,7 @@ class clientThread extends Thread {
                 }
             }
             // initial message for the client
-            this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, anything else for broadcast, /quit for quit)");
+            this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, direct messages for broadcast, /quit to quit)");
             this.outptStream.flush();
 
             // start listening to client input

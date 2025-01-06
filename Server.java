@@ -131,7 +131,9 @@ class clientThread extends Thread {
             // initial message for the client
             this.outptStream.writeObject("<command><client_name>: <your_message> \n(@ for unicast, ! for blockcast, direct messages for broadcast, /quit to quit)");
             this.outptStream.flush();
-
+            for(clientThread current_client : clients) {
+                System.out.println("Client name: " + current_client.clientName);
+            }
             // start listening to client input
             while(true) {
                 String line = (String) inptStream.readObject();
@@ -179,33 +181,38 @@ class clientThread extends Thread {
 
     // send messages to a specific client
     void unicast(String line, String name) throws IOException, ClassNotFoundException {
-        String[] words = line.split(":", 2); // split the words from commands and message
-        if(!(words.length > 1 && words[1] != null)) { // check if the message is empty
+        String[] words = line.split(":", 2);
+        if(!(words.length > 1 && words[1] != null)) {
             this.outptStream.writeObject("Specify the client name and your message, e.g. @<client_name>: <your_message>");
             this.outptStream.flush();
             return;
         } else {
-            words[1] = words[1].trim(); //remove the whitespace from both ends of the messages
+            words[1] = words[1].trim();
             if(words[1].isEmpty()) {
                 this.outptStream.writeObject("Message cannot be empty");
                 this.outptStream.flush();
                 return;
             }
+            
+            boolean clientFound = false;
             for(clientThread current_client : clients) {
-                if(current_client == null || current_client == this) continue; // skip the current client
-                if(current_client.clientName.equals(words[0])){ // check if the client name exists
+                if(current_client == null || current_client == this) continue;
+                if(current_client.clientName.equals(words[0])){
                     current_client.outptStream.writeObject("{" + name + "(to you)}" + words[1]);
                     current_client.outptStream.flush();
-
+    
                     System.out.println(this.clientName.substring(1) + " transferred a private message to client " + current_client.clientName.substring(1));
-
+    
                     this.outptStream.writeObject("Private message sent to " + current_client.clientName.substring(1));
                     this.outptStream.flush();
+                    clientFound = true;
                     break;
                 }
+            }
+            
+            if (!clientFound) {
                 this.outptStream.writeObject("Client " + words[0].substring(1) + " not found");
                 this.outptStream.flush();
-                break;
             }
         }
     }
@@ -223,16 +230,24 @@ class clientThread extends Thread {
                 this.outptStream.flush();
                 return;
             }
+            boolean clientFound = false;
             for(clientThread current_client : clients) {
                 // send message to all clients except the blocked one
                 if(current_client != null && current_client != this && current_client.clientName != null && !current_client.clientName.equals("@"+words[0].substring(1))){
                     current_client.outptStream.writeObject("{" + name + "(blockcast)}" + words[1]);
                     current_client.outptStream.flush();
+
+                    System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
+                    
+                    this.outptStream.writeObject("Blockcast message sent to everyone except: " + words[0]);
+                    this.outptStream.flush();
+                    clientFound = true;
+                    break;
                 }
-                System.out.println(this.clientName.substring(1) + " transferred a blockcast message except to client " + current_client.clientName.substring(1));
+            }
+            if(!clientFound) {
                 this.outptStream.writeObject("Blockcast message sent to everyone except: " + words[0]);
                 this.outptStream.flush();
-                break;
             }
         }
     }

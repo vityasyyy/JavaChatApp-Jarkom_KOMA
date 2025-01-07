@@ -21,13 +21,13 @@ Final Project Socket Programming Jaringan Komputer KOM A Universitas Gadjah Mada
    javac Server.java Client.java
 2. **Run the server** <br/>
    Run with the default port (6942)
-  ```java Server```
-  OR run with a custom port
-  ```java Server <port_number>```
+   ```java Server```
+   OR run with a custom port
+   ```java Server <port_number>```
 3. **Open a new terminal** <br/>
-```java Client <server_ip> <port_number>```
+   ```java Client <server_ip> <port_number>```
 4. **Run the Client** <br/>
-```java Client <server_ip> <port_number> or java Client``` 
+   ```java Client <server_ip> <port_number> or java Client``` 
 
 ## Commit message
 <**header_commit**>[**deskripsi_singkat**]: <**commit_message**> <br/> <br/>

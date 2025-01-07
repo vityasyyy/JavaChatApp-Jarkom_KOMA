@@ -20,9 +20,9 @@ Final Project Socket Programming Jaringan Komputer KOM A Universitas Gadjah Mada
    ```bash
    javac Server.java Client.java
 2. **Run the server** <br/>
-   ### Run with the default port (6942)
+   Run with the default port (6942)
   ```java Server```
-  ### OR run with a custom port
+  OR run with a custom port
   ```java Server <port_number>```
 3. **Open a new terminal** <br/>
 ```java Client <server_ip> <port_number>```
